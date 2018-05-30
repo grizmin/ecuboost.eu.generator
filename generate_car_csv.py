@@ -62,5 +62,7 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--infile', type=argparse.FileType('r', encoding='utf8'), default=None, help="In file in CSV format" )
     args = parser.parse_args()
 
-gencars = CarGenerator('auto_databases_one_March_2018_en.csv')
-print('[*] Time taken: {0:.2f} seconds.'.format(gencars.run()))
+    gencars = CarGenerator('auto_databases_one_March_2018_en.csv')
+    time_taken = gencars.run()
+
+    print('[*] Time taken: {0:.2f} seconds.'.format(time_taken))
