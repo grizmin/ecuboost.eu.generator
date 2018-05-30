@@ -40,8 +40,6 @@ class CarGenerator:
 
         :param carsdict: defaultdict object - output from get_car_info
         :param make: optional make parameter, sting, in case you want to generate only specific make
-        :param sort: sort key, must be one of the infile csv field names. Defaults to None, which means that no \
-                     sort will be performed.
         :return:
         """
         # for carmake in carsdict.keys():
@@ -105,5 +103,6 @@ if __name__ == '__main__':
     else:
         gencars = CarGenerator(args.infile)
 
-    time_taken = gencars.run('Audi')
+    time_taken = gencars.run()
+
     print('[*] Time taken: {0:.2f} seconds.'.format(time_taken))
