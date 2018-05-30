@@ -34,7 +34,7 @@ class CarGenerator:
             car_info[row['make']].append(row)
         return car_info
 
-    def write_car_csv(self, carsdict, make=None):
+    def write_car_csv(self, carsdict, make=None, sort=None):
         """
         Writes Car CSV files to a given folder.
 
@@ -52,18 +52,36 @@ class CarGenerator:
                 if not self.fieldnames:
                     self.fieldnames = ['Model', 'Year', 'Generation', 'Engine', 'Engine Type', 'Car Body',
                                        'Drive', 'Gearbox']
-                writer = csv.DictWriter(csvfile, fieldnames=self.fieldnames)
+                car_selection = carsdict[carmake]
+                if sort:
+                    def sort_mixed_type_list(seq):
+                        # Collect the values by type
+                        d = defaultdict(list)
+                        for x in seq:
+                            # d[type(x)] = x
+                            d.setdefault(type(x), []).append(x)
+                            print(d)
+                        # Sort each type
+                        d = {k: iter(sorted(v)) for k, v in d.items()}
 
+                        # The result list
+                        result = [next(d[type(x)]) for x in seq]
+                        return result
+
+                    car_selection = sort_mixed_type_list(car_selection)
+                    # car_selection = sorted(car_selection, key=lambda row: row[sort], reverse=False)
+                    # print([i['year'] for i in car_selection])
+
+                writer = csv.DictWriter(csvfile, fieldnames=self.fieldnames)
                 writer.writeheader()
-                for row in carsdict[carmake]:
-                    # print(row)
+                for row in car_selection:
                     writer.writerow({'Model': row['model'], 'Year': row['year'], 'Engine': row['trim'], 'Generation':
                                     row['generation'], 'Engine Type': row['engine_type'], 'Car Body': row['body'],
                                     'Drive': row['drive'], 'Gearbox': row['gearbox']})
             print('{}.csv written.'.format(carmake))
         return
 
-    def run(self, make=None):
+    def run(self, make=None, sort='model'):
         """
         Self explainatory
 
@@ -71,7 +89,7 @@ class CarGenerator:
         :return: time taken
         """
         start = time.time()
-        self.write_car_csv(self.get_car_info(self.cars), make=make)
+        self.write_car_csv(self.get_car_info(self.cars), make=make, sort=sort)
         stop = time.time()
         time_taken = stop - start
         return time_taken
@@ -88,4 +106,4 @@ if __name__ == '__main__':
     else:
         gencars = CarGenerator(args.infile)
 
-    print('[*] Time taken: {0:.2f} seconds.'.format(gencars.run()))
+    print('[*] Time taken: {0:.2f} seconds.'.format(gencars.run('Audi')))
