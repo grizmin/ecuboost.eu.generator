@@ -40,6 +40,8 @@ class CarGenerator:
 
         :param carsdict: defaultdict object - output from get_car_info
         :param make: optional make parameter, sting, in case you want to generate only specific make
+        :param sort: sort key, must be one of the infile csv field names. Defaults to None, which means that no \
+                     sort will be performed.
         :return:
         """
         # for carmake in carsdict.keys():
@@ -54,23 +56,19 @@ class CarGenerator:
                                        'Drive', 'Gearbox']
                 car_selection = carsdict[carmake]
                 if sort:
-                    def sort_mixed_type_list(seq):
+                    def sort_mixed_type_list_of_dict_items(seq):
                         # Collect the values by type
                         d = defaultdict(list)
                         for x in seq:
-                            # d[type(x)] = x
-                            d.setdefault(type(x), []).append(x)
-                            print(d)
+                            d['int' if x[sort].isdigit() else 'str'].append(x)
                         # Sort each type
-                        d = {k: iter(sorted(v)) for k, v in d.items()}
-
-                        # The result list
-                        result = [next(d[type(x)]) for x in seq]
+                        d = {k: iter(sorted(v, key=lambda x: x[sort] if k == 'str' else int(x[sort]))) for k, v in d.items()}
+                        # The result list - maintain the default str<>int order with iterator object
+                        result = [next(d['int' if x['model'].isdigit() else 'str']) for x in seq]
+                        # print([x[sort] for x in result])
                         return result
 
-                    car_selection = sort_mixed_type_list(car_selection)
-                    # car_selection = sorted(car_selection, key=lambda row: row[sort], reverse=False)
-                    # print([i['year'] for i in car_selection])
+                    car_selection = sort_mixed_type_list_of_dict_items(car_selection)
 
                 writer = csv.DictWriter(csvfile, fieldnames=self.fieldnames)
                 writer.writeheader()
@@ -86,6 +84,7 @@ class CarGenerator:
         Self explainatory
 
         :param make: Optional Make. Use it if you want to generate only 1 make instad of all.
+        :param sort: sort key, must be one of the infile csv field names. Defaults to 'model'
         :return: time taken
         """
         start = time.time()
@@ -106,4 +105,5 @@ if __name__ == '__main__':
     else:
         gencars = CarGenerator(args.infile)
 
-    print('[*] Time taken: {0:.2f} seconds.'.format(gencars.run('Audi')))
+    time_taken = gencars.run('Audi')
+    print('[*] Time taken: {0:.2f} seconds.'.format(time_taken))
