@@ -34,7 +34,7 @@ class CarGenerator:
             car_info[row['make']].append(row)
         return car_info
 
-    def write_car_csv(self, carsdict, make=None):
+    def write_car_csv(self, carsdict, make=None, sort=None):
         """
         Writes Car CSV files to a given folder.
 
@@ -52,26 +52,41 @@ class CarGenerator:
                 if not self.fieldnames:
                     self.fieldnames = ['Model', 'Year', 'Generation', 'Engine', 'Engine Type', 'Car Body',
                                        'Drive', 'Gearbox']
-                writer = csv.DictWriter(csvfile, fieldnames=self.fieldnames)
+                car_selection = carsdict[carmake]
+                if sort:
+                    def sort_mixed_type_list_of_dict_items(seq):
+                        # Collect the values by type
+                        d = defaultdict(list)
+                        for x in seq:
+                            d['int' if x[sort].isdigit() else 'str'].append(x)
+                        # Sort each type
+                        d = {k: iter(sorted(v, key=lambda x: x[sort] if k == 'str' else int(x[sort]))) for k, v in d.items()}
+                        # The result list - maintain the default str<>int order with iterator object
+                        result = [next(d['int' if x['model'].isdigit() else 'str']) for x in seq]
+                        # print([x[sort] for x in result])
+                        return result
 
+                    car_selection = sort_mixed_type_list_of_dict_items(car_selection)
+
+                writer = csv.DictWriter(csvfile, fieldnames=self.fieldnames)
                 writer.writeheader()
-                for row in carsdict[carmake]:
-                    # print(row)
+                for row in car_selection:
                     writer.writerow({'Model': row['model'], 'Year': row['year'], 'Engine': row['trim'], 'Generation':
                                     row['generation'], 'Engine Type': row['engine_type'], 'Car Body': row['body'],
                                     'Drive': row['drive'], 'Gearbox': row['gearbox']})
             print('{}.csv written.'.format(carmake))
         return
 
-    def run(self, make=None):
+    def run(self, make=None, sort='model'):
         """
         Self explainatory
 
         :param make: Optional Make. Use it if you want to generate only 1 make instad of all.
+        :param sort: sort key, must be one of the infile csv field names. Defaults to 'model'
         :return: time taken
         """
         start = time.time()
-        self.write_car_csv(self.get_car_info(self.cars), make=make)
+        self.write_car_csv(self.get_car_info(self.cars), make=make, sort=sort)
         stop = time.time()
         time_taken = stop - start
         return time_taken
